@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Footer from "@/components/Footer";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Navbar from "@/components/Navbar";
+import ScrollToTop from "@/components/ScrollToTop";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
@@ -25,6 +26,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: SITE_TITLE,
   description: SITE_DESCRIPTION,
+  icons: {
+    icon: [{ url: "/icon", type: "image/png" }],
+    apple: [{ url: "/apple-icon", type: "image/png" }],
+  },
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
   openGraph: {
@@ -53,6 +58,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="min-w-0 antialiased bg-[#09090B] text-white">
+        <ScrollToTop />
         <Navbar />
         <div className="pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0">
           {children}

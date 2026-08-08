@@ -9,9 +9,7 @@ import { Menu, X } from "lucide-react";
 import {
   desktopNavLinks,
   menuSectionLinks,
-  resumeNavLink,
 } from "@/lib/navigation";
-import { RESUME_FILENAME } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 const drawerSpring = {
@@ -132,16 +130,6 @@ export default function NavMenu() {
                   </li>
                 ))}
               </ul>
-            </div>
-
-            <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-              <a
-                href={resumeNavLink.href}
-                download={RESUME_FILENAME}
-                className="flex w-full items-center justify-center rounded-xl bg-[#2563EB] px-4 py-3 text-sm font-semibold text-white transition hover:shadow-[0_0_40px_rgba(37,99,235,0.45)]"
-              >
-                Download Resume
-              </a>
             </div>
           </motion.nav>
         </>

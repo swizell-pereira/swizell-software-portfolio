@@ -18,7 +18,10 @@ import {
 } from "@/lib/data/journey";
 import { cn } from "@/lib/utils";
 
-const spring = { type: "spring" as const, stiffness: 380, damping: 32 };
+const spring = { type: "spring" as const, stiffness: 280, damping: 34 };
+const NAV_COOLDOWN_MS = 850;
+const WHEEL_DELTA_THRESHOLD = 140;
+const SWIPE_THRESHOLD = 72;
 
 function MilestoneNode({
   milestone,
@@ -119,6 +122,9 @@ export default function PromotionJourney() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const isDragging = useRef(false);
+  const lastNavAt = useRef(0);
+  const wheelAccumulator = useRef(0);
+  const scrollDebounce = useRef<number | undefined>(undefined);
 
   const milestone = journeyMilestones[activeIndex];
 
@@ -172,19 +178,46 @@ export default function PromotionJourney() {
   }, []);
 
   const goTo = useCallback(
-    (index: number) => {
+    (index: number, options?: { force?: boolean }) => {
+      const now = Date.now();
+      if (!options?.force && now - lastNavAt.current < NAV_COOLDOWN_MS) return;
+
       const next = Math.max(0, Math.min(journeyCount - 1, index));
       if (next === activeIndex) return;
+
+      lastNavAt.current = now;
+      wheelAccumulator.current = 0;
       setWalking(true);
       setActiveIndex(next);
       scrollToIndex(next);
-      window.setTimeout(() => setWalking(false), 520);
+      window.setTimeout(() => setWalking(false), 680);
     },
     [activeIndex, scrollToIndex]
   );
 
   const goNext = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo]);
   const goPrev = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo]);
+
+  const syncActiveFromScroll = useCallback(() => {
+    const scroller = scrollRef.current;
+    if (!scroller || window.innerWidth >= 768) return;
+
+    const center = scroller.scrollLeft + scroller.clientWidth / 2;
+    let closest = activeIndex;
+    let minDist = Infinity;
+
+    nodeRefs.current.forEach((node, i) => {
+      if (!node) return;
+      const nodeCenter = node.offsetLeft + node.offsetWidth / 2;
+      const dist = Math.abs(center - nodeCenter);
+      if (dist < minDist) {
+        minDist = dist;
+        closest = i;
+      }
+    });
+
+    if (closest !== activeIndex) goTo(closest);
+  }, [activeIndex, goTo]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -196,19 +229,31 @@ export default function PromotionJourney() {
   }, [goNext, goPrev]);
 
   useEffect(() => {
-    const scroller = scrollRef.current;
-    if (!scroller) return;
+    const section = document.getElementById("journey");
+    if (!section) return;
 
     const onWheel = (e: WheelEvent) => {
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-      if (Math.abs(e.deltaY) < 8) return;
+      if (Math.abs(e.deltaY) < 4) return;
+
+      const rect = section.getBoundingClientRect();
+      const inView =
+        rect.top < window.innerHeight * 0.75 &&
+        rect.bottom > window.innerHeight * 0.25;
+      if (!inView) return;
+
+      wheelAccumulator.current += e.deltaY;
+
+      if (Math.abs(wheelAccumulator.current) < WHEEL_DELTA_THRESHOLD) return;
+
       e.preventDefault();
-      if (e.deltaY > 0) goNext();
+      if (wheelAccumulator.current > 0) goNext();
       else goPrev();
+      wheelAccumulator.current = 0;
     };
 
-    scroller.addEventListener("wheel", onWheel, { passive: false });
-    return () => scroller.removeEventListener("wheel", onWheel);
+    section.addEventListener("wheel", onWheel, { passive: false });
+    return () => section.removeEventListener("wheel", onWheel);
   }, [goNext, goPrev]);
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -220,7 +265,7 @@ export default function PromotionJourney() {
     if (!isDragging.current) return;
     isDragging.current = false;
     const delta = e.changedTouches[0].clientX - touchStartX.current;
-    if (Math.abs(delta) < 48) return;
+    if (Math.abs(delta) < SWIPE_THRESHOLD) return;
     if (delta < 0) goNext();
     else goPrev();
   };
@@ -229,8 +274,6 @@ export default function PromotionJourney() {
     <section
       id="journey"
       className="relative flex min-h-[100dvh] flex-col px-4 py-16 md:min-h-0 md:px-8 md:py-28"
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(37,99,235,0.12),transparent)]" />
 
@@ -260,26 +303,12 @@ export default function PromotionJourney() {
             ref={scrollRef}
             className="scrollbar-none -mx-4 snap-x snap-mandatory overflow-x-auto px-4 pb-2 md:mx-0 md:overflow-visible md:px-0 md:snap-none"
             onScroll={() => {
-              const scroller = scrollRef.current;
-              if (!scroller || window.innerWidth >= 768) return;
-              const center = scroller.scrollLeft + scroller.clientWidth / 2;
-              let closest = activeIndex;
-              let minDist = Infinity;
-              nodeRefs.current.forEach((node, i) => {
-                if (!node) return;
-                const nodeCenter =
-                  node.offsetLeft + node.offsetWidth / 2;
-                const dist = Math.abs(center - nodeCenter);
-                if (dist < minDist) {
-                  minDist = dist;
-                  closest = i;
-                }
-              });
-              if (closest !== activeIndex) {
-                setWalking(true);
-                setActiveIndex(closest);
-                window.setTimeout(() => setWalking(false), 520);
+              if (scrollDebounce.current) {
+                window.clearTimeout(scrollDebounce.current);
               }
+              scrollDebounce.current = window.setTimeout(() => {
+                syncActiveFromScroll();
+              }, 180);
             }}
           >
             <div
@@ -317,7 +346,7 @@ export default function PromotionJourney() {
                     index={i}
                     isActive={i === activeIndex}
                     isPast={i < activeIndex}
-                    onSelect={() => goTo(i)}
+                    onSelect={() => goTo(i, { force: true })}
                     nodeRef={(el) => {
                       nodeRefs.current[i] = el;
                     }}
@@ -360,9 +389,9 @@ export default function PromotionJourney() {
               key={m.id}
               type="button"
               aria-label={`Go to ${m.date}`}
-              onClick={() => goTo(i)}
+              onClick={() => goTo(i, { force: true })}
               className={cn(
-                "h-1 rounded-full transition-all duration-300",
+                "h-1 rounded-full transition-all duration-500",
                 i === activeIndex
                   ? "w-6 bg-blue-400"
                   : i < activeIndex
@@ -374,7 +403,11 @@ export default function PromotionJourney() {
         </div>
 
         {/* Single content card */}
-        <div className="relative min-h-0 flex-1 overflow-y-auto md:min-h-[420px] md:overflow-visible">
+        <div
+          className="relative min-h-0 flex-1 overflow-y-auto md:min-h-[420px] md:overflow-visible"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
           <AnimatePresence mode="wait">
             <JourneyMilestoneCard key={milestone.id} milestone={milestone} />
           </AnimatePresence>

@@ -22,20 +22,19 @@ export default function Navbar() {
     <nav className="fixed top-0 z-50 w-full bg-black/20 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
       <div className="mx-auto flex min-h-[4.5rem] max-w-7xl items-center justify-between gap-3 px-6 py-2.5 md:px-8">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <ProfilePhotoButton />
           {back ? (
             <Link
               href={back.href}
+              aria-label={`Back to ${back.label}`}
               className={cn(
-                "inline-flex shrink-0 items-center gap-0.5 rounded-lg py-1.5 pr-2 text-sm text-neutral-400 transition-colors hover:text-white",
+                "inline-flex shrink-0 items-center justify-center rounded-full p-1.5 text-neutral-400 transition-colors hover:bg-white/5 hover:text-white",
                 "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
               )}
-              aria-label={`Back to ${back.label}`}
             >
-              <ChevronLeft className="size-5" aria-hidden />
-              <span>{back.label}</span>
+              <ChevronLeft className="size-5" strokeWidth={2} aria-hidden />
             </Link>
           ) : null}
+          <ProfilePhotoButton />
           <Link
             href="/"
             className={cn(

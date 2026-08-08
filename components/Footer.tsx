@@ -5,7 +5,10 @@ export default function Footer() {
   return (
     <footer className="px-6 py-8 md:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-        <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-6 gap-y-2">
+        <nav
+          aria-label="Footer navigation"
+          className="hidden flex-wrap gap-x-6 gap-y-2 lg:flex"
+        >
           {desktopNavLinks.map((link) => (
             <Link
               key={link.href}
@@ -16,7 +19,7 @@ export default function Footer() {
             </Link>
           ))}
         </nav>
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-neutral-600 lg:ml-auto">
           © {new Date().getFullYear()} Swizell Pereira
         </p>
       </div>

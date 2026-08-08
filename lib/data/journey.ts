@@ -225,7 +225,7 @@ export const journeyMilestones: JourneyMilestone[] = [
     id: "m12",
     date: "Today",
     badge: "FlowCommerce",
-    role: "Founder & Engineer",
+    role: "Architect and Engineer",
     project: "FlowCommerce",
     isFinal: true,
     learned: [
