@@ -24,6 +24,18 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+html.menu-open,
+body.menu-open {
+  overflow: hidden;
+}
+
+body.menu-open {
+  position: fixed;
+  width: 100%;
+  left: 0;
+  right: 0;
+}
+
 ::selection {
   background: #2563eb;
   color: white;

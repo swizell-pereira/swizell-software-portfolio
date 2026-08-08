@@ -10,6 +10,11 @@ export const RESUME_PATH = "/resume.pdf";
 
 export const RESUME_FILENAME = "Swizell-Pereira-Resume.pdf";
 
+/** Headshot at public/images/profile.png */
+export const PROFILE_PHOTO_PATH = "/images/profile.png";
+
+export const PROFILE_INITIALS = "SP";
+
 export const SITE_NAME = "Swizell Pereira";
 
 export const SITE_TITLE = "Swizell Pereira — Senior Full Stack Engineer";

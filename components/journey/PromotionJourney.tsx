@@ -9,7 +9,7 @@ import {
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
-import EngineerAvatar from "@/components/journey/EngineerAvatar";
+import ProfilePhoto from "@/components/ProfilePhoto";
 import JourneyMilestoneCard from "@/components/journey/JourneyMilestoneCard";
 import {
   journeyCount,
@@ -335,12 +335,21 @@ export default function PromotionJourney() {
 
           {/* Walking avatar */}
           <motion.div
-            className="pointer-events-none absolute top-9 z-10 -translate-x-1/2 md:top-10"
+            className="pointer-events-none absolute top-8 z-10 -translate-x-1/2 md:top-9"
             animate={{ left: avatarX }}
             transition={spring}
             onAnimationComplete={measure}
           >
-            <EngineerAvatar walking={walking} />
+            <motion.div
+              animate={walking ? { y: [0, -3, 0] } : { y: 0 }}
+              transition={
+                walking
+                  ? { duration: 0.45, repeat: Infinity, ease: "easeInOut" }
+                  : undefined
+              }
+            >
+              <ProfilePhoto size="xs" />
+            </motion.div>
           </motion.div>
         </div>
 

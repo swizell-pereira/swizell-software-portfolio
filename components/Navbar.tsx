@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import NavMenu from "@/components/NavMenu";
+import ProfilePhotoButton from "@/components/ProfilePhotoButton";
 import {
   desktopNavLinks,
   getBackNavigation,
@@ -19,8 +20,9 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 z-50 w-full bg-black/20 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-6 md:px-8">
+      <div className="mx-auto flex min-h-[4.5rem] max-w-7xl items-center justify-between gap-3 px-6 py-2.5 md:px-8">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <ProfilePhotoButton />
           {back ? (
             <Link
               href={back.href}
