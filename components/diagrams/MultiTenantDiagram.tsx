@@ -7,126 +7,169 @@ import {
   DiagramNode,
   DiagramEdge,
   DiagramZone,
+  DiagramDashedEdge,
   DiagramLabel,
   Packet,
   Hint,
 } from "./primitives";
 
+type Tenant = "a" | "b" | null;
+
 export default function MultiTenantDiagram() {
-  const [tenant, setTenant] = useState<"a" | "b" | null>(null);
+  const [tenant, setTenant] = useState<Tenant>(null);
 
   const colorA = "#60a5fa";
   const colorB = "#34d399";
 
   return (
     <div>
-      <DiagramShell>
+      <DiagramShell canvasWidth={720}>
         <svg
-          viewBox="0 0 560 400"
+          viewBox="0 0 720 560"
           className="h-auto w-full"
           role="img"
-          aria-label="Multi-tenant SaaS isolation"
+          aria-label="Multi-tenant SaaS with tenant context middleware and schema isolation"
         >
-          <DiagramZone x={16} y={12} width={120} height={300} label="Tenants" />
-          <DiagramZone x={148} y={12} width={164} height={300} label="Shared Infrastructure" />
-          <DiagramZone x={328} y={12} width={216} height={300} label="Isolated Schemas" />
+          <DiagramZone x={16} y={12} width={688} height={88} label="Tenants" />
+          <DiagramZone x={16} y={108} width={688} height={88} label="Edge" />
+          <DiagramZone x={16} y={204} width={688} height={88} label="Application" />
+          <DiagramZone x={16} y={300} width={688} height={120} label="Data" />
 
           {/* Tenants */}
           <DiagramNode
-            x={32}
-            y={48}
-            width={88}
+            x={80}
+            y={36}
+            width={100}
             label="Tenant A"
+            sublabel="org acme"
             glow={tenant === "a"}
             onHover={(v) => setTenant(v ? "a" : null)}
           />
           <DiagramNode
-            x={32}
-            y={200}
-            width={88}
+            x={80}
+            y={120}
+            width={100}
             label="Tenant B"
+            sublabel="org globex"
             glow={tenant === "b"}
             onHover={(v) => setTenant(v ? "b" : null)}
           />
 
-          {/* Tenant Context middleware */}
+          {/* Edge — tenant resolution */}
+          <DiagramEdge x1={180} y1={58} x2={260} y2={132} active={tenant === "a"} />
+          <DiagramEdge x1={180} y1={142} x2={260} y2={148} active={tenant === "b"} />
+          <DiagramLabel x={200} y={88} text="JWT tenant claim" active={tenant === "a"} />
+          <DiagramLabel x={200} y={168} text="JWT tenant claim" active={tenant === "b"} />
+
           <DiagramNode
-            x={160}
-            y={130}
-            width={140}
-            label="Tenant Context"
-            sublabel="middleware"
+            x={260}
+            y={132}
+            width={200}
+            height={44}
+            label="API Gateway"
+            sublabel="extract tenant_id"
             glow={tenant !== null}
           />
 
-          <DiagramEdge x1={120} y1={66} x2={160} y2={140} active={tenant === "a"} />
-          <DiagramEdge x1={120} y1={218} x2={160} y2={160} active={tenant === "b"} />
-          <DiagramLabel x={132} y={100} text="tenant_id=A" active={tenant === "a"} />
-          <DiagramLabel x={132} y={252} text="tenant_id=B" active={tenant === "b"} />
-
-          <DiagramEdge x1={300} y1={148} x2={340} y2={148} active={tenant !== null} />
-
-          {/* Shared DB */}
+          {/* Application — tenant context */}
+          <DiagramEdge x1={360} y1={176} x2={360} y2={220} active={tenant !== null} />
           <DiagramNode
-            x={340}
-            y={130}
-            width={120}
-            label="Shared DB"
+            x={240}
+            y={220}
+            width={240}
+            height={44}
+            label="Tenant Context Middleware"
+            sublabel="SET search_path · row filter"
             glow={tenant !== null}
           />
 
-          <DiagramEdge x1={460} y1={140} x2={500} y2={66} active={tenant === "a"} />
-          <DiagramEdge x1={460} y1={160} x2={500} y2={218} active={tenant === "b"} />
+          {/* Data tier */}
+          <DiagramEdge x1={360} y1={264} x2={360} y2={316} active={tenant !== null} />
 
-          {/* Schemas */}
           <DiagramNode
-            x={480}
-            y={48}
+            x={280}
+            y={316}
+            width={160}
+            height={44}
+            label="PostgreSQL"
+            sublabel="shared cluster"
+            glow={tenant !== null}
+          />
+
+          <DiagramEdge x1={440} y1={338} x2={520} y2={338} active={tenant !== null} />
+
+          {/* Schema isolation */}
+          <DiagramNode
+            x={520}
+            y={300}
             width={120}
+            height={44}
             label="Schema A"
-            sublabel="isolated"
+            sublabel="tenant_a.*"
             glow={tenant === "a"}
           />
           <DiagramNode
-            x={480}
-            y={200}
+            x={520}
+            y={372}
             width={120}
+            height={44}
             label="Schema B"
-            sublabel="isolated"
+            sublabel="tenant_b.*"
             glow={tenant === "b"}
           />
 
+          <DiagramEdge
+            x1={520}
+            y1={344}
+            x2={520}
+            y2={372}
+            active={tenant === "b"}
+          />
+          <DiagramEdge
+            x1={580}
+            y1={344}
+            x2={580}
+            y2={300}
+            active={tenant === "a"}
+          />
+
           {/* Isolation boundary */}
-          <motion.line
-            x1={16}
-            y1={130}
-            x2={544}
-            y2={130}
-            stroke={tenant ? "rgba(96,165,250,0.35)" : "rgba(255,255,255,0.06)"}
-            strokeDasharray="4 6"
-            animate={tenant ? { opacity: [0.4, 0.9, 0.4] } : { opacity: 1 }}
-            transition={{ duration: 1.5, repeat: tenant ? Infinity : 0 }}
+          <DiagramDashedEdge
+            x1={500}
+            y1={288}
+            x2={660}
+            y2={288}
+            active={tenant !== null}
+            color="rgba(96,165,250,0.5)"
+          />
+          <DiagramDashedEdge
+            x1={500}
+            y1={428}
+            x2={660}
+            y2={428}
+            active={tenant !== null}
+            color="rgba(96,165,250,0.5)"
           />
 
           {tenant === "a" && (
             <>
-              <Packet x1={120} y1={66} x2={160} y2={140} delay={0} color={colorA} />
-              <Packet x1={300} y1={148} x2={340} y2={148} delay={0.25} color={colorA} />
-              <Packet x1={460} y1={148} x2={500} y2={66} delay={0.5} color={colorA} />
+              <Packet x1={180} y1={58} x2={360} y2={132} delay={0} color={colorA} />
+              <Packet x1={360} y1={176} x2={360} y2={242} delay={0.25} color={colorA} />
+              <Packet x1={440} y1={338} x2={580} y2={322} delay={0.5} color={colorA} />
             </>
           )}
           {tenant === "b" && (
             <>
-              <Packet x1={120} y1={218} x2={160} y2={160} delay={0} color={colorB} />
-              <Packet x1={300} y1={158} x2={340} y2={158} delay={0.25} color={colorB} />
-              <Packet x1={460} y1={168} x2={500} y2={218} delay={0.5} color={colorB} />
+              <Packet x1={180} y1={142} x2={360} y2={148} delay={0} color={colorB} />
+              <Packet x1={360} y1={176} x2={360} y2={242} delay={0.25} color={colorB} />
+              <Packet x1={440} y1={338} x2={580} y2={394} delay={0.5} color={colorB} />
             </>
           )}
 
           {tenant && (
             <motion.text
-              x={280}
-              y={360}
+              x={360}
+              y={480}
               textAnchor="middle"
               fill="#a1a1aa"
               fontSize={11}
@@ -134,15 +177,26 @@ export default function MultiTenantDiagram() {
               transition={{ duration: 1.4, repeat: Infinity }}
             >
               {tenant === "a"
-                ? "Tenant A traffic stays in Schema A — row & schema isolation."
-                : "Tenant B traffic stays in Schema B — no cross-tenant leakage."}
+                ? "Tenant A queries scoped to schema_a — no cross-tenant reads."
+                : "Tenant B queries scoped to schema_b — isolation enforced at connection."}
             </motion.text>
           )}
+
+          <text
+            x={360}
+            y={520}
+            textAnchor="middle"
+            fill="#52525b"
+            fontSize={10}
+            fontFamily="ui-monospace, monospace"
+          >
+            Schema-per-tenant · tenant_id in JWT · middleware sets DB context
+          </text>
         </svg>
       </DiagramShell>
       <Hint>
-        Hover a tenant to see tenant_id routing through middleware and schema
-        isolation boundaries.
+        Hover Tenant A or B to trace tenant_id from JWT through gateway middleware
+        to isolated PostgreSQL schemas.
       </Hint>
     </div>
   );

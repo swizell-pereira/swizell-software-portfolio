@@ -14,116 +14,172 @@ import {
   Hint,
 } from "./primitives";
 
+type Mode = "hit" | "miss" | null;
+
 export default function RedisCacheDiagram() {
-  const [mode, setMode] = useState<"miss" | "hit" | null>(null);
+  const [mode, setMode] = useState<Mode>(null);
+
+  const hit = mode === "hit";
+  const miss = mode === "miss";
 
   return (
     <div>
-      <DiagramShell>
+      <DiagramShell canvasWidth={720}>
         <svg
-          viewBox="0 0 560 400"
+          viewBox="0 0 720 520"
           className="h-auto w-full"
           role="img"
-          aria-label="Redis cache flow with hit and miss paths"
+          aria-label="Cache-aside pattern with Redis hit and miss paths"
         >
-          <DiagramZone x={16} y={12} width={260} height={120} label="Request Path" />
-          <DiagramZone x={16} y={148} width={528} height={240} label="Cache Layer" />
+          <DiagramZone x={16} y={12} width={688} height={72} label="Client" />
+          <DiagramZone x={16} y={92} width={688} height={88} label="Application" />
+          <DiagramZone x={16} y={188} width={688} height={120} label="Cache" />
+          <DiagramZone x={16} y={316} width={688} height={88} label="Data" />
 
-          {/* Flow labels */}
-          <text x={32} y={48} fill="#71717a" fontSize={10} fontFamily="ui-monospace, monospace">
-            1st request → Database (MISS)
-          </text>
-          <text x={32} y={64} fill="#71717a" fontSize={10} fontFamily="ui-monospace, monospace">
-            2nd request → Redis (HIT)
-          </text>
-          <DiagramChip x={32} y={76} width={48} label="TTL" active={mode === "hit"} accent="gold" />
+          {/* Client */}
+          <DiagramNode x={300} y={32} width={120} label="Client" active={!!mode} />
 
-          {/* Client → API */}
-          <DiagramNode x={40} y={180} width={100} label="Client" />
-          <DiagramEdge x1={140} y1={198} x2={180} y2={198} active={!!mode} />
-          <DiagramNode x={180} y={180} width={100} label="API" />
+          {/* Application tier */}
+          <DiagramEdge x1={360} y1={68} x2={360} y2={108} active={!!mode} />
+          <DiagramNode
+            x={260}
+            y={108}
+            width={200}
+            height={44}
+            label="API / Service Layer"
+            sublabel="cache-aside logic"
+            active={!!mode}
+          />
 
-          {/* API → Redis (hit path) */}
-          <DiagramEdge x1={280} y1={190} x2={320} y2={120} active={mode === "hit"} />
-          <DiagramLabel x={296} y={148} text="cache lookup" active={mode === "hit"} />
+          {/* Cache lookup */}
+          <DiagramEdge x1={360} y1={152} x2={360} y2={200} active={!!mode} />
+          <DiagramLabel x={372} y={182} text="GET cache key" active={!!mode} />
 
-          {/* API → Database (miss path) */}
-          <DiagramEdge x1={280} y1={206} x2={320} y2={280} active={mode === "miss"} />
-          <DiagramLabel x={296} y={248} text="cache miss" active={mode === "miss"} />
-
-          {/* Redis */}
           <g onMouseEnter={() => setMode("hit")} onMouseLeave={() => setMode(null)}>
             <DiagramNode
-              x={320}
-              y={102}
-              width={120}
+              x={240}
+              y={200}
+              width={240}
+              height={44}
               label="Redis"
-              sublabel="TTL 300s"
-              glow={mode === "hit"}
+              sublabel="in-memory · TTL 300s"
+              glow={hit}
+              active={hit}
             />
+            <DiagramChip x={260} y={252} width={56} label="HIT" active={hit} accent="gold" />
+            <DiagramChip x={324} y={252} width={72} label="cache key" active={hit} />
           </g>
 
-          {/* Database */}
+          {/* Miss → database */}
           <g onMouseEnter={() => setMode("miss")} onMouseLeave={() => setMode(null)}>
-            <DiagramNode
-              x={320}
-              y={262}
-              width={120}
-              label="Database"
-              glow={mode === "miss"}
+            <DiagramEdge
+              x1={360}
+              y1={244}
+              x2={360}
+              y2={332}
+              active={miss}
             />
+            <DiagramLabel x={372} y={292} text="MISS → read DB" active={miss} />
+            <DiagramNode
+              x={260}
+              y={332}
+              width={200}
+              height={44}
+              label="PostgreSQL"
+              sublabel="source of truth"
+              glow={miss}
+              active={miss}
+            />
+            <DiagramChip x={260} y={384} width={64} label="MISS" active={miss} accent="gold" />
           </g>
 
           {/* Write-back on miss */}
           <DiagramDashedEdge
-            x1={380}
-            y1={262}
-            x2={380}
-            y2={138}
-            active={mode === "miss"}
-            color="rgba(248,113,113,0.6)"
+            x1={460}
+            y1={354}
+            x2={460}
+            y2={244}
+            active={miss}
+            color="#f87171"
           />
-          <DiagramLabel x={392} y={200} text="write-back" active={mode === "miss"} />
+          <DiagramLabel x={472} y={300} text="write-back + TTL" active={miss} />
 
-          {/* Return paths to client */}
-          <DiagramEdge x1={320} y1={198} x2={140} y2={198} active={mode === "hit"} />
-          <DiagramEdge x1={320} y1={198} x2={140} y2={198} active={mode === "miss"} />
+          {/* Response paths */}
+          <DiagramEdge
+            x1={240}
+            y1={222}
+            x2={180}
+            y2={130}
+            active={hit}
+          />
+          <DiagramEdge
+            x1={260}
+            y1={332}
+            x2={180}
+            y2={130}
+            active={miss}
+          />
+          <DiagramEdge
+            x1={180}
+            y1={130}
+            x2={300}
+            y2={68}
+            active={!!mode}
+          />
+          <DiagramLabel x={188} y={108} text="200 OK" active={!!mode} />
 
-          {mode === "miss" && (
+          {miss && (
             <>
-              <Packet x1={280} y1={206} x2={320} y2={280} delay={0} color="#f87171" />
-              <Packet x1={380} y1={280} x2={380} y2={138} delay={0.5} color="#f87171" />
-              <Packet x1={380} y1={138} x2={230} y2={198} delay={0.9} color="#f87171" />
-              <motion.g
-                animate={{ opacity: [0.6, 1, 0.6] }}
+              <Packet x1={360} y1={152} x2={360} y2={332} delay={0} color="#f87171" />
+              <Packet x1={460} y1={354} x2={460} y2={244} delay={0.45} color="#f87171" />
+              <Packet x1={360} y1={244} x2={180} y2={130} delay={0.85} color="#f87171" />
+              <motion.text
+                x={480}
+                y={370}
+                fill="#f87171"
+                fontSize={11}
+                fontWeight={600}
+                animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 1.2, repeat: Infinity }}
               >
-                <text x={460} y={288} fill="#f87171" fontSize={11} fontWeight={600}>
-                  MISS
-                </text>
-              </motion.g>
+                MISS — populate cache for next request
+              </motion.text>
             </>
           )}
 
-          {mode === "hit" && (
+          {hit && (
             <>
-              <Packet x1={280} y1={190} x2={320} y2={120} delay={0} color="#34d399" />
-              <Packet x1={380} y1={120} x2={230} y2={198} delay={0.6} color="#34d399" />
-              <motion.g
-                animate={{ opacity: [0.6, 1, 0.6] }}
+              <Packet x1={360} y1={152} x2={360} y2={222} delay={0} color="#34d399" />
+              <Packet x1={240} y1={222} x2={300} y2={68} delay={0.5} color="#34d399" />
+              <motion.text
+                x={480}
+                y={230}
+                fill="#34d399"
+                fontSize={11}
+                fontWeight={600}
+                animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 1.2, repeat: Infinity }}
               >
-                <text x={460} y={126} fill="#34d399" fontSize={11} fontWeight={600}>
-                  HIT
-                </text>
-              </motion.g>
+                HIT — skip database
+              </motion.text>
             </>
           )}
+
+          <text
+            x={360}
+            y={468}
+            textAnchor="middle"
+            fill="#52525b"
+            fontSize={10}
+            fontFamily="ui-monospace, monospace"
+          >
+            Pattern: cache-aside · app owns consistency · TTL bounds staleness
+          </text>
         </svg>
       </DiagramShell>
       <Hint>
-        Hover Redis for a cache hit. Hover Database for a cache miss — includes
-        write-back to Redis on first request.
+        Hover Redis for a cache HIT (fast path). Hover PostgreSQL for a MISS —
+        read DB, write-back to Redis, then respond.
       </Hint>
     </div>
   );

@@ -39,7 +39,7 @@ export default function FlowCommerceDiagram() {
 
   return (
     <div>
-      <DiagramShell>
+      <DiagramShell canvasWidth={900}>
         <svg
           viewBox="0 0 900 620"
           className="h-auto w-full"

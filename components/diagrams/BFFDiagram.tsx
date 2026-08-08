@@ -8,247 +8,458 @@ import {
   DiagramEdge,
   DiagramDashedEdge,
   DiagramLabel,
+  DiagramZone,
+  DiagramChip,
   Packet,
   Hint,
 } from "./primitives";
 
-type HoverKey = "gateway" | "jwt" | "oauth" | "redis" | "rabbit" | "none";
+type HoverKey =
+  | "bff"
+  | "gateway"
+  | "jwt"
+  | "oauth"
+  | "redis"
+  | "rabbit"
+  | "none";
+
+/** Vertical spine for the synchronous request path */
+const CX = 360;
 
 export default function BFFDiagram() {
   const [hover, setHover] = useState<HoverKey>("none");
 
+  const bff = hover === "bff";
   const gw = hover === "gateway";
   const jwt = hover === "jwt";
   const oauth = hover === "oauth";
   const redis = hover === "redis";
   const rabbit = hover === "rabbit";
 
+  const svcY = 300;
+  const svcH = 36;
+  const svcA = { x: 90, cx: 150 };
+  const svcB = { x: 310, cx: 370 };
+  const svcC = { x: 530, cx: 590 };
+
   return (
     <div>
-      <DiagramShell>
+      <DiagramShell canvasWidth={720}>
         <svg
-          viewBox="0 0 560 520"
+          viewBox="0 0 720 620"
           className="h-auto w-full"
           role="img"
-          aria-label="Backend For Frontend architecture"
+          aria-label="Backend For Frontend architecture with separate BFF, API Gateway, domain services, and message bus"
         >
-          <DiagramNode x={220} y={16} width={120} label="Browser" />
-          <DiagramEdge x1={280} y1={52} x2={280} y2={68} active={gw || jwt || oauth} />
+          {/* Swimlanes */}
+          <DiagramZone x={16} y={12} width={688} height={76} label="Client" />
+          <DiagramZone x={16} y={96} width={688} height={76} label="BFF" />
+          <DiagramZone x={16} y={180} width={688} height={88} label="Edge" />
+          <DiagramZone x={16} y={276} width={688} height={96} label="Domain" />
+          <DiagramZone x={16} y={380} width={688} height={72} label="Messaging" />
+          <DiagramZone x={16} y={460} width={688} height={88} label="Data" />
+
+          {/* ── Client tier ── */}
+          <DiagramNode x={300} y={32} width={120} label="Browser" active={oauth} />
+
+          <DiagramNode
+            x={520}
+            y={28}
+            width={160}
+            height={40}
+            label="Identity Provider"
+            sublabel="OAuth 2.0"
+            active={oauth}
+            onHover={(v) => setHover(v ? "oauth" : "none")}
+          />
+
+          {/* Browser → BFF */}
+          <DiagramEdge
+            x1={CX}
+            y1={68}
+            x2={CX}
+            y2={108}
+            active={bff || jwt || gw}
+          />
+          <DiagramLabel
+            x={CX + 8}
+            y={92}
+            text="HTTPS"
+            active={bff || jwt}
+          />
+
+          {/* OAuth: Browser ↔ IdP */}
           <DiagramDashedEdge
-            x1={280}
-            y1={52}
-            x2={280}
-            y2={68}
+            x1={420}
+            y1={50}
+            x2={520}
+            y2={50}
             active={oauth}
             color="#fbbf24"
           />
+          {oauth ? (
+            <>
+              <Packet x1={420} y1={50} x2={520} y2={50} delay={0} color="#fbbf24" />
+              <Packet x1={520} y1={68} x2={420} y2={68} delay={0.6} color="#fbbf24" />
+              <DiagramDashedEdge
+                x1={600}
+                y1={68}
+                x2={470}
+                y2={108}
+                active
+                color="#fbbf24"
+              />
+              <motion.text
+                x={548}
+                y={88}
+                fill="#fbbf24"
+                fontSize={9}
+                fontFamily="ui-monospace, monospace"
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.4, repeat: Infinity }}
+              >
+                auth code callback
+              </motion.text>
+            </>
+          ) : null}
 
-          <DiagramNode x={200} y={68} width={160} label="React / Next.js" />
-          <DiagramLabel x={280} y={128} text="HTTPS Request" active={gw || jwt} />
-          <DiagramEdge x1={280} y1={134} x2={280} y2={152} active={gw || jwt || oauth} />
+          {/* ── BFF tier ── */}
+          <DiagramNode
+            x={240}
+            y={112}
+            width={240}
+            height={44}
+            label="Next.js Web BFF"
+            sublabel="Route Handlers · UI DTOs"
+            active={bff || jwt}
+            glow={bff}
+            onHover={(v) => setHover(v ? "bff" : "none")}
+          />
 
-          {/* Gateway */}
+          {/* BFF → Gateway */}
+          <DiagramEdge
+            x1={CX}
+            y1={156}
+            x2={CX}
+            y2={196}
+            active={gw || jwt || bff}
+          />
+          <DiagramLabel
+            x={CX + 8}
+            y={182}
+            text="Bearer JWT"
+            active={jwt || gw}
+          />
+
+          {/* BFF → Redis (sessions) */}
+          <DiagramDashedEdge
+            x1={300}
+            y1={156}
+            x2={180}
+            y2={488}
+            active={redis || bff}
+            color="#34d399"
+          />
+
+          {/* ── Edge tier: API Gateway (distinct from BFF) ── */}
           <g
             onMouseEnter={() => setHover("gateway")}
             onMouseLeave={() => setHover("none")}
             className="cursor-pointer"
           >
             <rect
-              x={120}
-              y={152}
+              x={200}
+              y={196}
               width={320}
-              height={118}
-              rx={16}
+              height={64}
+              rx={14}
               fill={gw ? "rgba(37,99,235,0.18)" : "rgba(255,255,255,0.03)"}
               stroke={gw ? "rgba(96,165,250,0.75)" : "rgba(255,255,255,0.12)"}
               strokeWidth={1.5}
             />
             <text
-              x={280}
-              y={176}
+              x={CX}
+              y={218}
               textAnchor="middle"
               fill="#ffffff"
               fontSize={13}
               fontWeight={600}
             >
-              BFF API Gateway
+              API Gateway
+            </text>
+            <text
+              x={CX}
+              y={232}
+              textAnchor="middle"
+              fill="#71717a"
+              fontSize={9}
+              fontFamily="ui-monospace, monospace"
+            >
+              TLS · Route · Enforce policy
             </text>
 
             {[
-              { key: "oauth" as const, label: "OAuth 2.0", x: 132, w: 62 },
-              { key: "jwt" as const, label: "JWT", x: 200, w: 44 },
-              { key: "gateway" as const, label: "Session", x: 250, w: 58 },
-              { key: "gateway" as const, label: "Auth", x: 314, w: 44 },
-              { key: "gateway" as const, label: "Rate Limit", x: 364, w: 68 },
-            ].map((chip, i) => (
-              <g
-                key={`${chip.label}-${i}`}
-                onMouseEnter={(e) => {
-                  e.stopPropagation();
-                  setHover(chip.key);
+              { key: "jwt" as const, label: "JWT Validate", x: 212, w: 72 },
+              { key: "gateway" as const, label: "Rate Limit", x: 290, w: 62 },
+              { key: "gateway" as const, label: "RBAC", x: 358, w: 44 },
+              { key: "gateway" as const, label: "Route", x: 408, w: 44 },
+            ].map((chip) => (
+              <DiagramChip
+                key={chip.label}
+                x={chip.x}
+                y={238}
+                width={chip.w}
+                label={chip.label}
+                active={
+                  (chip.key === "jwt" && jwt) || (chip.key === "gateway" && gw)
+                }
+                onHover={(v) => {
+                  if (v) setHover(chip.key);
                 }}
-              >
-                <rect
-                  x={chip.x}
-                  y={192}
-                  width={chip.w}
-                  height={22}
-                  rx={6}
-                  fill={
-                    chip.key === "jwt" && jwt
-                      ? "rgba(251,191,36,0.25)"
-                      : chip.key === "oauth" && oauth
-                        ? "rgba(251,191,36,0.25)"
-                        : "rgba(255,255,255,0.06)"
-                  }
-                  stroke={
-                    chip.key === "jwt" && jwt
-                      ? "rgba(251,191,36,0.8)"
-                      : chip.key === "oauth" && oauth
-                        ? "rgba(251,191,36,0.8)"
-                        : "rgba(255,255,255,0.12)"
-                  }
-                />
-                <text
-                  x={chip.x + chip.w / 2}
-                  y={207}
-                  textAnchor="middle"
-                  fill={
-                    (chip.key === "jwt" && jwt) || (chip.key === "oauth" && oauth)
-                      ? "#fbbf24"
-                      : "#a1a1aa"
-                  }
-                  fontSize={chip.label === "OAuth 2.0" ? 9 : 10}
-                >
-                  {chip.label}
-                </text>
-              </g>
+              />
             ))}
-
-            <rect
-              x={248}
-              y={224}
-              width={64}
-              height={22}
-              rx={6}
-              fill="rgba(255,255,255,0.06)"
-              stroke="rgba(255,255,255,0.12)"
-            />
-            <text x={280} y={239} textAnchor="middle" fill="#a1a1aa" fontSize={10}>
-              RBAC
-            </text>
           </g>
 
-          <DiagramEdge x1={280} y1={270} x2={280} y2={290} active={gw} />
-          <DiagramEdge x1={120} y1={290} x2={440} y2={290} active={gw} />
-          <DiagramEdge x1={120} y1={290} x2={120} y2={310} active={gw} />
-          <DiagramEdge x1={280} y1={290} x2={280} y2={310} active={gw} />
-          <DiagramEdge x1={440} y1={290} x2={440} y2={310} active={gw} />
+          {/* Gateway → services fan-out */}
+          <DiagramEdge x1={CX} y1={260} x2={CX} y2={276} active={gw || bff} />
+          <DiagramEdge
+            x1={svcA.cx}
+            y1={276}
+            x2={svcC.cx}
+            y2={276}
+            active={gw || bff}
+          />
+          <DiagramEdge
+            x1={svcA.cx}
+            y1={276}
+            x2={svcA.cx}
+            y2={svcY}
+            active={gw || bff}
+          />
+          <DiagramEdge
+            x1={svcB.cx}
+            y1={276}
+            x2={svcB.cx}
+            y2={svcY}
+            active={gw || bff}
+          />
+          <DiagramEdge
+            x1={svcC.cx}
+            y1={276}
+            x2={svcC.cx}
+            y2={svcY}
+            active={gw || bff}
+          />
 
-          <DiagramLabel x={120} y={304} text="/robots" active={gw} />
-          <DiagramLabel x={280} y={304} text="/users" active={gw} />
-          <DiagramLabel x={440} y={304} text="/workflows" active={gw} />
+          <DiagramLabel x={svcA.cx} y={292} text="/orders" active={gw} />
+          <DiagramLabel x={svcB.cx} y={292} text="/users" active={gw} />
+          <DiagramLabel x={svcC.cx} y={292} text="/inventory" active={gw} />
 
-          <DiagramNode x={60} y={310} width={120} label="Robot Service" />
-          <DiagramNode x={220} y={310} width={120} label="User Service" />
-          <DiagramNode x={380} y={310} width={120} label="Workflow Service" />
+          {/* ── Domain tier ── */}
+          <DiagramNode
+            x={svcA.x}
+            y={svcY}
+            width={120}
+            label="Order Service"
+            active={gw || bff || rabbit}
+          />
+          <DiagramNode
+            x={svcB.x}
+            y={svcY}
+            width={120}
+            label="User Service"
+            active={gw || bff || rabbit}
+          />
+          <DiagramNode
+            x={svcC.x}
+            y={svcY}
+            width={120}
+            label="Inventory Service"
+            active={gw || bff || rabbit}
+          />
 
-          <DiagramEdge x1={120} y1={346} x2={120} y2={382} active={redis} />
-          <DiagramEdge x1={280} y1={346} x2={280} y2={382} active={rabbit} />
-          <DiagramEdge x1={440} y1={346} x2={440} y2={382} active={gw} />
+          {/* Services → message bus (async, not vertical ownership) */}
+          <DiagramEdge
+            x1={svcA.cx}
+            y1={svcY + svcH}
+            x2={svcA.cx}
+            y2={396}
+            active={rabbit}
+          />
+          <DiagramEdge
+            x1={svcB.cx}
+            y1={svcY + svcH}
+            x2={svcB.cx}
+            y2={396}
+            active={rabbit}
+          />
+          <DiagramEdge
+            x1={svcC.cx}
+            y1={svcY + svcH}
+            x2={svcC.cx}
+            y2={396}
+            active={rabbit}
+          />
+          <DiagramEdge
+            x1={svcA.cx}
+            y1={412}
+            x2={svcC.cx}
+            y2={412}
+            active={rabbit}
+          />
 
           <DiagramNode
-            x={60}
-            y={382}
+            x={160}
+            y={396}
+            width={400}
+            height={36}
+            label="RabbitMQ Event Bus"
+            sublabel="async · pub/sub"
+            glow={rabbit}
+            active={rabbit}
+            onHover={(v) => setHover(v ? "rabbit" : "none")}
+          />
+
+          {/* Services → PostgreSQL (database-per-service) */}
+          <DiagramEdge
+            x1={svcA.cx}
+            y1={svcY + svcH}
+            x2={200}
+            y2={488}
+            active={gw}
+          />
+          <DiagramEdge
+            x1={svcB.cx}
+            y1={svcY + svcH}
+            x2={360}
+            y2={488}
+            active={gw}
+          />
+          <DiagramEdge
+            x1={svcC.cx}
+            y1={svcY + svcH}
+            x2={520}
+            y2={488}
+            active={gw}
+          />
+
+          {/* ── Data tier ── */}
+          <DiagramNode
+            x={120}
+            y={488}
             width={120}
             label="Redis"
+            sublabel="sessions · cache"
             glow={redis}
+            active={redis}
             onHover={(v) => setHover(v ? "redis" : "none")}
           />
           <DiagramNode
-            x={220}
-            y={382}
-            width={120}
-            label="RabbitMQ"
-            glow={rabbit}
-            onHover={(v) => setHover(v ? "rabbit" : "none")}
+            x={440}
+            y={488}
+            width={200}
+            height={44}
+            label="PostgreSQL"
+            sublabel="database per service"
+            active={gw}
           />
-          <DiagramNode x={380} y={382} width={120} label="PostgreSQL" />
 
-          {/* OAuth redirect flow */}
-          {oauth && (
+          {/* ── Animated flows ── */}
+
+          {/* BFF orchestrates via gateway */}
+          {bff && !jwt && !oauth && !redis && !rabbit && !gw ? (
             <>
-              <DiagramDashedEdge x1={280} y1={52} x2={280} y2={152} active color="#fbbf24" />
-              <Packet x1={280} y1={52} x2={280} y2={152} delay={0} color="#fbbf24" />
-              <motion.g
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 1.3, repeat: Infinity }}
+              <Packet x1={CX} y1={68} x2={CX} y2={108} delay={0} />
+              <Packet x1={CX} y1={156} x2={CX} y2={196} delay={0.2} />
+              <Packet x1={CX} y1={260} x2={svcB.cx} y2={svcY} delay={0.45} />
+              <Packet x1={CX} y1={260} x2={svcC.cx} y2={svcY} delay={0.65} />
+              <motion.text
+                x={390}
+                y={140}
+                fill="#93c5fd"
+                fontSize={9}
+                fontFamily="ui-monospace, monospace"
+                animate={{ opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
               >
-                <text x={300} y={100} fill="#fbbf24" fontSize={9} fontFamily="ui-monospace, monospace">
-                  OAuth redirect
-                </text>
-              </motion.g>
+                aggregate · shape response
+              </motion.text>
             </>
-          )}
+          ) : null}
 
-          {/* JWT token travels browser → gateway */}
-          {jwt && (
+          {/* JWT: BFF → Gateway */}
+          {jwt ? (
             <>
-              <Packet x1={280} y1={104} x2={280} y2={152} delay={0} color="#fbbf24" />
+              <Packet x1={CX} y1={156} x2={CX} y2={196} delay={0} color="#fbbf24" />
               <motion.g
-                animate={{ y: [0, 48, 0] }}
-                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                animate={{ opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 1.4, repeat: Infinity }}
               >
-                <rect
-                  x={300}
-                  y={100}
-                  width={44}
-                  height={18}
-                  rx={4}
-                  fill="rgba(251,191,36,0.2)"
-                  stroke="#fbbf24"
-                />
                 <text
-                  x={322}
-                  y={112}
-                  textAnchor="middle"
+                  x={390}
+                  y={178}
                   fill="#fbbf24"
                   fontSize={9}
                   fontFamily="ui-monospace, monospace"
                 >
-                  JWT
+                  Authorization: Bearer
                 </text>
               </motion.g>
             </>
-          )}
+          ) : null}
 
-          {redis && (
+          {/* Gateway routing */}
+          {gw && !jwt && !oauth && !redis && !rabbit && !bff ? (
             <>
-              <Packet x1={120} y1={346} x2={120} y2={382} delay={0} color="#34d399" />
-              <Packet x1={120} y1={400} x2={120} y2={360} delay={0.9} color="#34d399" />
+              <Packet x1={CX} y1={260} x2={svcA.cx} y2={svcY} delay={0} />
+              <Packet x1={CX} y1={260} x2={svcB.cx} y2={svcY} delay={0.2} />
+              <Packet x1={CX} y1={260} x2={svcC.cx} y2={svcY} delay={0.4} />
             </>
-          )}
+          ) : null}
 
-          {rabbit && (
+          {/* Redis session/cache */}
+          {redis ? (
             <>
-              <Packet x1={280} y1={346} x2={280} y2={382} delay={0} />
-              <Packet x1={280} y1={400} x2={200} y2={400} delay={0.35} />
-              <Packet x1={280} y1={400} x2={360} y2={400} delay={0.7} />
+              <Packet x1={300} y1={156} x2={180} y2={488} delay={0} color="#34d399" />
+              <Packet x1={180} y1={488} x2={300} y2={156} delay={0.9} color="#34d399" />
             </>
-          )}
+          ) : null}
 
-          {gw && !jwt && !oauth && !redis && !rabbit && (
+          {/* Async events */}
+          {rabbit ? (
             <>
-              <Packet x1={280} y1={270} x2={120} y2={310} delay={0} />
-              <Packet x1={280} y1={270} x2={280} y2={310} delay={0.25} />
-              <Packet x1={280} y1={270} x2={440} y2={310} delay={0.5} />
+              <Packet
+                x1={svcA.cx}
+                y1={svcY + svcH}
+                x2={svcA.cx}
+                y2={412}
+                delay={0}
+                color="#a78bfa"
+              />
+              <Packet
+                x1={svcB.cx}
+                y1={svcY + svcH}
+                x2={svcC.cx}
+                y2={412}
+                delay={0.3}
+                color="#a78bfa"
+              />
+              <Packet
+                x1={560}
+                y1={412}
+                x2={400}
+                y2={412}
+                delay={0.6}
+                color="#a78bfa"
+              />
             </>
-          )}
+          ) : null}
         </svg>
       </DiagramShell>
       <Hint>
-        Hover OAuth 2.0 · JWT · Redis · RabbitMQ · or the Gateway to animate
-        routing and message flow.
+        Hover the Web BFF · API Gateway · Identity Provider · Redis · or Event
+        Bus — BFF aggregates for the UI; gateway validates and routes; services
+        publish async events.
       </Hint>
     </div>
   );

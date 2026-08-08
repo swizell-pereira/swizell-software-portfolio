@@ -3,24 +3,23 @@
 import { motion } from "framer-motion";
 import DiagramContainer from "@/components/DiagramContainer";
 
-export default function SystemDesignPlayground() {
+export default function SystemsContent() {
   return (
-    <section id="playground" className="relative px-6 py-28 md:px-8">
+    <section className="relative px-4 py-12 sm:px-6 md:px-8 md:py-28">
       <div className="mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-12 max-w-3xl"
+          className="mb-8 max-w-3xl md:mb-12"
         >
           <p className="mb-4 text-xs font-medium tracking-[0.22em] text-[#2563EB] uppercase">
-            System Design Playground
+            How I Design Systems
           </p>
-          <h2 className="text-4xl font-semibold tracking-tight md:text-5xl">
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">
             How I think in systems.
-          </h2>
-          <p className="mt-6 text-lg leading-8 text-neutral-400">
+          </h1>
+          <p className="mt-4 text-base leading-7 text-neutral-400 md:mt-6 md:text-lg md:leading-8">
             Interactive architecture — the way senior engineers explain
             decisions. Hover nodes to animate request paths, tokens, and
             message flow.
@@ -29,8 +28,7 @@ export default function SystemDesignPlayground() {
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-40px" }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.1 }}
         >
           <DiagramContainer />

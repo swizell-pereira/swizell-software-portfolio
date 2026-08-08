@@ -1,77 +1,21 @@
 "use client";
 
-import { useState, type ComponentType } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { systemTabs, type SystemTabId } from "@/lib/data/systems";
+import { DiagramScrollViewport } from "@/components/diagrams/primitives";
 import { cn } from "@/lib/utils";
-import BFFDiagram from "@/components/diagrams/BFFDiagram";
-import MultiTenantDiagram from "@/components/diagrams/MultiTenantDiagram";
-import RedisCacheDiagram from "@/components/diagrams/RedisCacheDiagram";
-import AuthDiagram from "@/components/diagrams/AuthDiagram";
-import RabbitMQDiagram from "@/components/diagrams/RabbitMQDiagram";
-import EventDrivenDiagram from "@/components/diagrams/EventDrivenDiagram";
-
-type DiagramId =
-  | "bff"
-  | "tenant"
-  | "redis"
-  | "jwt"
-  | "rabbit"
-  | "event";
-
-const items: {
-  id: DiagramId;
-  label: string;
-  description: string;
-  Component: ComponentType;
-}[] = [
-  {
-    id: "bff",
-    label: "Backend For Frontend",
-    description: "Gateway, OAuth 2.0, JWT, RBAC, and service orchestration.",
-    Component: BFFDiagram,
-  },
-  {
-    id: "tenant",
-    label: "Multi Tenant SaaS",
-    description: "Tenant context middleware with schema isolation.",
-    Component: MultiTenantDiagram,
-  },
-  {
-    id: "redis",
-    label: "Redis Cache",
-    description: "Cache hit vs miss with TTL write-back.",
-    Component: RedisCacheDiagram,
-  },
-  {
-    id: "jwt",
-    label: "Authentication",
-    description: "JWT issuance and OAuth 2.0 — two paths, one protected API.",
-    Component: AuthDiagram,
-  },
-  {
-    id: "rabbit",
-    label: "RabbitMQ",
-    description: "Exchange routing and fan-out to consumers.",
-    Component: RabbitMQDiagram,
-  },
-  {
-    id: "event",
-    label: "Event Driven",
-    description: "Kafka topics lighting up downstream.",
-    Component: EventDrivenDiagram,
-  },
-];
 
 export default function DiagramContainer() {
-  const [active, setActive] = useState<DiagramId>("bff");
-  const current = items.find((item) => item.id === active)!;
+  const [active, setActive] = useState<SystemTabId>("bff");
+  const current = systemTabs.find((item) => item.id === active)!;
 
   return (
-    <div className="overflow-hidden rounded-[24px] border border-white/10 bg-white/[0.03] shadow-[0_0_80px_rgba(37,99,235,0.08)] backdrop-blur-xl">
-      <div className="grid lg:grid-cols-[280px_1fr]">
-        {/* Left nav — Linear / Stripe docs style */}
-        <nav className="border-b border-white/10 lg:border-r lg:border-b-0">
-          <div className="border-b border-white/10 px-5 py-4">
+    <div className="min-w-0 rounded-2xl bg-white/[0.03] shadow-[0_0_80px_rgba(37,99,235,0.08)] backdrop-blur-xl lg:overflow-hidden">
+      <div className="flex min-w-0 flex-col lg:grid lg:grid-cols-[280px_1fr]">
+        {/* Tabs — sticky below navbar on mobile */}
+        <nav className="sticky top-16 z-30 bg-[#09090B]/95 backdrop-blur-md lg:static lg:bg-transparent lg:backdrop-blur-none">
+          <div className="hidden px-5 py-4 lg:block">
             <p className="text-[11px] font-medium tracking-[0.2em] text-neutral-500 uppercase">
               System Design
             </p>
@@ -80,23 +24,29 @@ export default function DiagramContainer() {
             </p>
           </div>
 
-          <ul className="flex gap-1 overflow-x-auto p-3 lg:block lg:space-y-1 lg:overflow-visible">
-            {items.map((item) => {
+          <ul
+            className="flex gap-1.5 overflow-x-auto p-3 [-webkit-overflow-scrolling:touch] scrollbar-none lg:block lg:space-y-1 lg:overflow-visible"
+            role="tablist"
+          >
+            {systemTabs.map((item) => {
               const selected = item.id === active;
               return (
                 <li key={item.id} className="shrink-0 lg:shrink">
                   <button
                     type="button"
+                    role="tab"
+                    aria-selected={selected}
                     onClick={() => setActive(item.id)}
                     className={cn(
-                      "w-full rounded-xl px-3.5 py-3 text-left transition-all duration-300",
+                      "rounded-xl px-3.5 py-2.5 text-left transition-all duration-300 lg:w-full lg:py-3",
                       selected
                         ? "bg-blue-500/15 text-white shadow-[inset_0_0_0_1px_rgba(96,165,250,0.35)]"
                         : "text-neutral-400 hover:bg-white/[0.04] hover:text-neutral-200"
                     )}
                   >
                     <span className="block text-sm font-medium whitespace-nowrap lg:whitespace-normal">
-                      {item.label}
+                      <span className="lg:hidden">{item.shortLabel}</span>
+                      <span className="hidden lg:inline">{item.label}</span>
                     </span>
                     <span className="mt-0.5 hidden text-xs leading-5 text-neutral-500 lg:block">
                       {item.description}
@@ -108,25 +58,28 @@ export default function DiagramContainer() {
           </ul>
         </nav>
 
-        {/* Right panel */}
-        <div className="min-h-[480px] p-4 sm:p-6 lg:p-8">
+        {/* Diagram panel — grows with content, scrolls on mobile */}
+        <div className="min-h-0 min-w-0 p-4 sm:p-6 lg:min-h-[480px] lg:p-8" role="tabpanel">
           <AnimatePresence mode="wait">
             <motion.div
               key={active}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="mb-5">
-                <h3 className="text-xl font-semibold tracking-tight text-white">
+              <div className="mb-4 lg:mb-5">
+                <h3 className="text-lg font-semibold tracking-tight text-white lg:text-xl">
                   {current.label}
                 </h3>
                 <p className="mt-1 text-sm text-neutral-500">
                   {current.description}
                 </p>
               </div>
-              <current.Component />
+
+              <DiagramScrollViewport>
+                <current.Component />
+              </DiagramScrollViewport>
             </motion.div>
           </AnimatePresence>
         </div>

@@ -100,7 +100,7 @@ export default function Hero() {
             <a
               href={RESUME_PATH}
               download={RESUME_FILENAME}
-              className="rounded-xl border border-white/15 bg-white/[0.04] px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-md transition-all duration-300 hover:scale-[1.03] hover:border-white/25 hover:bg-white/[0.08]"
+              className="rounded-xl bg-white/[0.06] px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-md transition-all duration-300 hover:scale-[1.03] hover:bg-white/[0.1]"
             >
               Download Resume
             </a>
@@ -114,7 +114,7 @@ export default function Hero() {
           className="relative"
         >
           <div className="absolute -inset-px rounded-3xl bg-gradient-to-br from-blue-500/40 via-cyan-400/10 to-transparent opacity-60 blur-sm" />
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-[0_0_80px_rgba(37,99,235,0.15)] backdrop-blur-xl sm:p-6">
+          <div className="relative overflow-hidden rounded-3xl bg-white/[0.03] p-5 shadow-[0_0_80px_rgba(37,99,235,0.15)] backdrop-blur-xl sm:p-6">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.07] via-transparent to-cyan-400/[0.04]" />
 
             <div className="relative">
@@ -149,7 +149,7 @@ export default function Hero() {
                 ))}
               </div>
 
-              <div className="mt-6 border-t border-white/10 pt-5">
+              <div className="mt-6 pt-5">
                 <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3">
                   {metrics.map((metric) => (
                     <div key={metric.label}>

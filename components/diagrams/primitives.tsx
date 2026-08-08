@@ -6,19 +6,64 @@ import { cn } from "@/lib/utils";
 export function DiagramShell({
   children,
   className,
+  canvasWidth = 560,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  /** Native SVG viewBox width — used for mobile horizontal scroll sizing */
+  canvasWidth?: 560 | 720 | 900;
+}) {
+  const mobileWidth =
+    canvasWidth === 900
+      ? "w-[900px]"
+      : canvasWidth === 720
+        ? "w-[720px]"
+        : "w-[560px]";
+
+  return (
+    <div
+      className={cn(
+        "relative shrink-0 rounded-2xl bg-[#0a0a0c]",
+        mobileWidth,
+        "max-w-none md:w-full md:max-w-full",
+        className
+      )}
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(37,99,235,0.08),transparent_55%)]" />
+      <div className="relative [&_svg]:block [&_svg]:h-auto [&_svg]:w-full">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Horizontal scroll wrapper for architecture diagrams on mobile */
+export function DiagramScrollViewport({
+  children,
+  className,
 }: {
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "relative w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a0c]",
-        className
-      )}
-    >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(37,99,235,0.08),transparent_55%)]" />
-      <div className="relative">{children}</div>
+    <div className={cn("relative w-full max-w-full", className)}>
+      <div
+        className={cn(
+          "flex w-full max-w-full overflow-x-auto overflow-y-visible overscroll-x-contain",
+          "[-webkit-overflow-scrolling:touch] [touch-action:pan-x_pan-y]",
+          "rounded-xl bg-white/[0.02] p-2",
+          "scrollbar-none"
+        )}
+      >
+        {children}
+      </div>
+      <div
+        className="pointer-events-none absolute inset-y-2 right-2 z-10 w-10 bg-gradient-to-l from-[#0a0a0c] to-transparent md:hidden"
+        aria-hidden
+      />
+      <p className="mt-2 text-[11px] text-neutral-500 md:hidden">
+        Swipe left to explore the full diagram →
+      </p>
     </div>
   );
 }

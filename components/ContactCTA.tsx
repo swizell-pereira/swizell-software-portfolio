@@ -1,17 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowUpRight, Mail, Phone } from "lucide-react";
+import { ArrowUpRight, Mail } from "lucide-react";
 import {
   GITHUB_URL,
   LINKEDIN_URL,
   RESUME_FILENAME,
   RESUME_PATH,
+  SITE_EMAIL,
 } from "@/lib/site";
 
-export default function Contact() {
+export default function ContactCTA() {
   return (
-    <section id="contact" className="relative px-6 py-28 md:px-8">
+    <section id="contact" className="relative px-6 py-20 md:px-8 md:py-28">
       <div className="mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -29,30 +30,20 @@ export default function Contact() {
             great together.
           </h2>
 
-          <div className="mt-10 space-y-3">
-            <a
-              href="mailto:swizellpereira14@gmail.com"
-              className="flex items-center gap-3 text-lg text-neutral-300 transition hover:text-white md:text-xl"
-            >
-              <Mail className="size-5 shrink-0 text-[#2563EB]" />
-              swizellpereira14@gmail.com
-            </a>
-            <a
-              href="tel:+917020267738"
-              className="flex items-center gap-3 text-base text-neutral-400 transition hover:text-white"
-            >
-              <Phone className="size-4 shrink-0 text-neutral-500" />
-              +91 70202 67738
-            </a>
-            <p className="pl-8 text-sm text-neutral-500">Bangalore, India</p>
-          </div>
+          <a
+            href={`mailto:${SITE_EMAIL}`}
+            className="mt-8 inline-flex items-center gap-3 text-lg text-neutral-300 transition hover:text-white md:text-xl"
+          >
+            <Mail className="size-5 shrink-0 text-[#2563EB]" />
+            {SITE_EMAIL}
+          </a>
 
           <div className="mt-10 flex flex-wrap gap-3">
             <a
               href={LINKEDIN_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/[0.08]"
+              className="inline-flex items-center gap-2 rounded-xl bg-white/[0.06] px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/[0.1]"
             >
               LinkedIn
               <ArrowUpRight className="size-4" />
@@ -61,7 +52,7 @@ export default function Contact() {
               href={GITHUB_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/[0.08]"
+              className="inline-flex items-center gap-2 rounded-xl bg-white/[0.06] px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/[0.1]"
             >
               GitHub
               <ArrowUpRight className="size-4" />
@@ -76,12 +67,6 @@ export default function Contact() {
             </a>
           </div>
         </motion.div>
-      </div>
-
-      <div className="mx-auto mt-24 max-w-7xl border-t border-white/10 pt-8">
-        <p className="text-sm text-neutral-600">
-          © {new Date().getFullYear()} Swizell Pereira
-        </p>
       </div>
     </section>
   );

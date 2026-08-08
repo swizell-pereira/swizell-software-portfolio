@@ -83,7 +83,7 @@ export default function TechnologyEcosystem() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.45, delay: i * 0.04 }}
-              className="grid gap-4 border-t border-white/10 py-7 md:grid-cols-[180px_1fr] md:items-center"
+              className="grid gap-4 py-7 md:grid-cols-[180px_1fr] md:items-center"
             >
               <p className="text-sm font-medium tracking-wide text-neutral-500">
                 {layer.title}
@@ -92,7 +92,7 @@ export default function TechnologyEcosystem() {
                 {layer.items.map((item) => (
                   <span
                     key={item}
-                    className="rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-sm text-neutral-200 backdrop-blur-sm transition hover:border-blue-500/40 hover:bg-blue-500/10"
+                    className="rounded-full bg-white/[0.06] px-3.5 py-1.5 text-sm text-neutral-200 backdrop-blur-sm transition hover:bg-blue-500/10"
                   >
                     {item}
                   </span>

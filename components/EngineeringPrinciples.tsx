@@ -30,7 +30,7 @@ export default function EngineeringPrinciples() {
           </h2>
         </motion.div>
 
-        <div className="mt-16 grid gap-0 border-t border-white/10 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {principles.map((principle, i) => (
             <motion.div
               key={principle}
@@ -38,7 +38,7 @@ export default function EngineeringPrinciples() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.45, delay: i * 0.05 }}
-              className="border-b border-white/10 px-0 py-8 sm:border-r sm:px-8 sm:odd:pl-0 lg:[&:nth-child(3n)]:border-r-0"
+              className="px-0 py-2 sm:px-4"
             >
               <p className="font-mono text-xs text-neutral-600">
                 0{i + 1}

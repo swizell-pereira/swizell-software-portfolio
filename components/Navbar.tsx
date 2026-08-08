@@ -1,32 +1,76 @@
 "use client";
 
-const links = [
-  { href: "#who", label: "Who I Am" },
-  { href: "#work", label: "Work" },
-  { href: "#principles", label: "Principles" },
-  { href: "#ecosystem", label: "Ecosystem" },
-  { href: "#playground", label: "Systems" },
-  { href: "#contact", label: "Contact" },
-];
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
+import NavMenu from "@/components/NavMenu";
+import {
+  desktopNavLinks,
+  getBackNavigation,
+  isNavActive,
+  resumeNavLink,
+} from "@/lib/navigation";
+import { RESUME_FILENAME } from "@/lib/site";
+import { cn } from "@/lib/utils";
 
 export default function Navbar() {
-  return (
-    <nav className="fixed top-0 z-50 w-full border-b border-white/10 bg-black/20 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 md:px-8">
-        <a href="#" className="text-lg font-semibold tracking-wide">
-          Swizell Pereira
-        </a>
+  const pathname = usePathname();
+  const back = getBackNavigation(pathname);
 
-        <div className="hidden items-center gap-7 text-sm text-neutral-300 lg:flex">
-          {links.map((link) => (
-            <a
+  return (
+    <nav className="fixed top-0 z-50 w-full bg-black/20 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-6 md:px-8">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          {back ? (
+            <Link
+              href={back.href}
+              className={cn(
+                "inline-flex shrink-0 items-center gap-0.5 rounded-lg py-1.5 pr-2 text-sm text-neutral-400 transition-colors hover:text-white",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+              )}
+              aria-label={`Back to ${back.label}`}
+            >
+              <ChevronLeft className="size-5" aria-hidden />
+              <span>{back.label}</span>
+            </Link>
+          ) : null}
+          <Link
+            href="/"
+            className={cn(
+              "truncate text-lg font-semibold tracking-wide",
+              back && "hidden sm:block"
+            )}
+          >
+            Swizell Pereira
+          </Link>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="hidden shrink-0 items-center gap-7 text-sm text-neutral-300 lg:flex">
+          {desktopNavLinks.map((link) => (
+            <Link
               key={link.href}
               href={link.href}
-              className="transition-colors hover:text-white"
+              className={cn(
+                "relative transition-colors hover:text-white",
+                isNavActive(link.href, pathname) && "text-white"
+              )}
             >
               {link.label}
-            </a>
+              {isNavActive(link.href, pathname) ? (
+                <span className="absolute inset-x-0 -bottom-1 h-px bg-blue-500" />
+              ) : null}
+            </Link>
           ))}
+          <a
+            href={resumeNavLink.href}
+            download={RESUME_FILENAME}
+            className="rounded-xl bg-[#2563EB] px-4 py-2 text-xs font-semibold text-white transition hover:shadow-[0_0_40px_rgba(37,99,235,0.45)]"
+          >
+            Resume
+          </a>
+          </div>
+          <NavMenu />
         </div>
       </div>
     </nav>

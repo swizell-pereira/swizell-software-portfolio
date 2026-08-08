@@ -9,17 +9,33 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 4rem;
+  overflow-y: auto;
+  overflow-x: clip;
+  max-width: 100%;
 }
 
 body {
   background: #09090b;
   color: white;
   font-family: var(--font-sans);
+  min-height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 ::selection {
   background: #2563eb;
   color: white;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes float {
